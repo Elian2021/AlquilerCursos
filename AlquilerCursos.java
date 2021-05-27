@@ -13,8 +13,12 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
@@ -22,6 +26,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -52,8 +57,9 @@ public class AlquilerCursos extends Application{
     
     CursoAlquilado curalquilado;
     
-    Label lblDni, lblCurso, lblFiltrar, lblHoras;
-    TextField txtDni, txtCurso, txtFiltrar, txtHoras;
+    Label lblDni, lblCurso, lblFiltrar;
+    TextField txtDni, txtCurso, txtFiltrar;
+    CheckBox unahora, treshoras, dia;
 
     public static void main(String[] args) {
     Application.launch(args);
@@ -108,35 +114,49 @@ public class AlquilerCursos extends Application{
         lblDni.setTranslateX(200);
         lblDni.setTranslateY(105);
         txtDni = new TextField();
-        txtDni.setStyle("-fx-base: ECEBEB");
+        txtDni.setStyle("-fx-base: #ECEBEB");
         txtDni.setTranslateX(250);
         txtDni.setTranslateY(100);
-        txtDni.setOnAction(e -> SeleccionarDni());
+        
+        txtDni.setOnAction(e -> SeleccionarDni());       
         
         lblCurso = new Label("Curso");
-        lblCurso.setStyle("-fx-font: 20 Arial");
+        lblCurso.setStyle("-fx-base: #7AC4FE; -fx-font: 20 Arial");
         lblCurso.setTranslateX(200);
         lblCurso.setTranslateY(155);
         txtCurso = new TextField();
-        txtCurso.setStyle("-fx-base: ECEBEB");
+        txtCurso.setStyle("-fx-base: #ECEBEB");
         txtCurso.setTranslateX(300);
         txtCurso.setTranslateY(150);
         txtCurso.setOnAction(e -> SeleccionarCarnet());
         
-        lblHoras = new Label("Horas");
-        lblHoras.setStyle("-fx-font: 20 Arial");
-        lblHoras.setTranslateX(200);
-        lblHoras.setTranslateY(200);
-        txtHoras = new TextField();
-        txtHoras.setStyle("-fx-base: ECEBEB");
-        txtHoras.setTranslateX(280);
-        txtHoras.setTranslateY(200);
-        txtHoras.setOnAction(e -> InsertarHoras());
+        
+        
+        ///********************** CHECKBOX ****************//
+        
+        unahora = new CheckBox("1 hora 20%");
+        unahora.setStyle("-fx-font: 20 Arial ");
+        unahora.setTranslateX(250);
+        unahora.setTranslateY(200);
+        
+        treshoras = new CheckBox("3 hora 30%");
+        treshoras.setStyle("-fx-font: 20 Arial ");
+        treshoras.setTranslateX(250);
+        treshoras.setTranslateY(250);
+        
+        dia = new CheckBox("6 horas 50%");
+        dia.setStyle("-fx-font: 20 Arial ");
+        dia.setTranslateX(250);
+        dia.setTranslateY(300);
+        
+        
+
+        
         
         
         PaneAlquilarCurso = new Pane();        
         contenedor.setCenter(PaneAlquilarCurso);
-        PaneAlquilarCurso.getChildren().addAll(lblDni, lblCurso, lblHoras, txtDni, txtCurso, txtHoras);       
+        PaneAlquilarCurso.getChildren().addAll(lblDni, lblCurso, txtDni, txtCurso, unahora, treshoras, dia);       
         
         
         Escena = new Scene(contenedor); 
@@ -392,22 +412,6 @@ public class AlquilerCursos extends Application{
        
        
    }
-//   public static String getDNI(){
-//        Connection conexion = obtener_connexio_BD();
-//        String vaDNI = "SELECT DNI FROM pedido WHERE ID='"+comanda+"'";
-//
-//        Statement stmtDNI = conexion.createStatement();
-//        ResultSet cs = stmtDNI.executeQuery(vaDNI);
-//        cs.next();
-//        String dniBD = cs.getString("DNI");
-//        
-//        if(dniBD == null){
-//            return  null;
-//        }
-//   
-//        return dniBD;
-//    }
-   
    
    public void FiltrarDni(){
        
@@ -431,12 +435,13 @@ public class AlquilerCursos extends Application{
    
    }
    
-   public Cliente SeleccionarDni(){
+   public Cliente SeleccionarDni(){       
        
        Cliente client = this.tblcliente.getSelectionModel().getSelectedItem();
        
        if(client != null){
            this.txtDni.setText(client.getDni());
+           System.out.println(client.getDni());
            
        }
        return client;
@@ -465,18 +470,10 @@ public class AlquilerCursos extends Application{
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
     //*****************VALIDACIONES ***************************************\\
     
-    /* public static boolean validarDni(String dni) {
-          denei=dni.
+     public static boolean validarDni(String dni) {
+         
         // TODO code application logic here
         char[] lletraDni = { 'T', 'R', 'W', 'A', 'G', 'M', 'Y', 'F', 'P', 'D', 'X', 'B', 'N', 'J', 'Z', 'S', 'Q', 'V',
                 'H', 'L', 'C', 'K', 'E' };
@@ -487,7 +484,7 @@ public class AlquilerCursos extends Application{
         boolean dniCorrecte = true;
         // donem longitud al dni
         if (dni.length() != 9) {
-            System.out.println("El dni ha de contenir 9 caracters");
+            System.out.println("El dni tiene que tener 9 caracteres");
             dniCorrecte=false;
             return false;
         } else {
@@ -502,7 +499,7 @@ public class AlquilerCursos extends Application{
             // mirem que els primers 8 digits siguin numeros
                 for (int i = 0; i < 8; i++) {
                     if (dni.charAt(i) < '0' || dni.charAt(i) > '9') {
-                        System.out.println("Les 8 primeres posicions han de ser numeriques");
+                        System.out.println("Les 8 primeras posiciones tienen que se numericas");
                         dniCorrecte = false;
                         return false;
                         //break;
@@ -521,18 +518,16 @@ public class AlquilerCursos extends Application{
                     System.out.println("Ult: " + ult);
                     System.out.println("Lletra DNI es: " + lletraDni[reste]);
                     if (ult == lletraDni[reste]) {
-                        System.out.println("El dni es correcte.");
+                        System.out.println("El dni correcto.");
                     } else {
                         //System.out.println("Aquest dni no existeix/no es correcte.");
                         dniCorrecte = false;
                         return false;
                     }
                 }
-            } else {
-                System.out.println("La ultima posicio ha de ser una lletra.");
-            }
+            } 
         }
         return true;
-     }*/
+     }
     
 }
