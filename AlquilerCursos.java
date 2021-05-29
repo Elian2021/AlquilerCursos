@@ -6,19 +6,17 @@
 package alquilercursos;
 
 import static conexion.Conexion.obtener_connexio_BD;
-import java.awt.event.MouseEvent;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Calendar;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
@@ -36,6 +34,8 @@ import javafx.scene.layout.BorderPane;
  * @author elian
  */
 public class AlquilerCursos extends Application{
+             
+
     
     Scene Escena, EscenaAlquiler;
     BorderPane contenedor;
@@ -57,9 +57,11 @@ public class AlquilerCursos extends Application{
     
     CursoAlquilado curalquilado;
     
-    Label lblDni, lblCurso, lblFiltrar;
-    TextField txtDni, txtCurso, txtFiltrar;
+    Label lblDni, lblCurso, lblFiltrar, lblID;
+    TextField txtDni, txtCurso, txtFiltrar, txtID;
     CheckBox unahora, treshoras, dia;
+    Button btnAlquilar;
+    Label lblMensaje;
 
     public static void main(String[] args) {
     Application.launch(args);
@@ -130,33 +132,48 @@ public class AlquilerCursos extends Application{
         txtCurso.setTranslateY(150);
         txtCurso.setOnAction(e -> SeleccionarCarnet());
         
+        lblID = new Label("ID Curso");
+        lblID.setStyle("-fx-base: #7AC4FE; -fx-font: 20 Arial");
+        lblID.setTranslateX(200);
+        lblID.setTranslateY(200);
+        txtID = new TextField();
+        txtID.setStyle("-fx-base: #ECEBEB");
+        txtID.setTranslateX(300);
+        txtID.setTranslateY(200);
+        
         
         
         ///********************** CHECKBOX ****************//
         
-        unahora = new CheckBox("1 hora 20%");
+        unahora = new CheckBox("1");
         unahora.setStyle("-fx-font: 20 Arial ");
         unahora.setTranslateX(250);
-        unahora.setTranslateY(200);
+        unahora.setTranslateY(250);
         
-        treshoras = new CheckBox("3 hora 30%");
+        treshoras = new CheckBox("3");
         treshoras.setStyle("-fx-font: 20 Arial ");
         treshoras.setTranslateX(250);
-        treshoras.setTranslateY(250);
+        treshoras.setTranslateY(300);
         
-        dia = new CheckBox("6 horas 50%");
+        dia = new CheckBox("6");
         dia.setStyle("-fx-font: 20 Arial ");
         dia.setTranslateX(250);
-        dia.setTranslateY(300);
+        dia.setTranslateY(350);
         
+        ///*******************BOTONEA*************///////
         
-
+        btnAlquilar = new Button ("Alquilar");
+        btnAlquilar.setStyle("-fx-font: 20 Arial; -fx-base: #CBDDF8");
+        btnAlquilar.setMinWidth(100);
+        btnAlquilar.setTranslateX(250);
+        btnAlquilar.setTranslateY(400);
+        btnAlquilar.setOnAction(e-> Alquilar ());
         
         
         
         PaneAlquilarCurso = new Pane();        
         contenedor.setCenter(PaneAlquilarCurso);
-        PaneAlquilarCurso.getChildren().addAll(lblDni, lblCurso, txtDni, txtCurso, unahora, treshoras, dia);       
+        PaneAlquilarCurso.getChildren().addAll(lblDni, lblCurso, lblID, txtDni, txtCurso, txtID, unahora, treshoras, dia, btnAlquilar);       
         
         
         Escena = new Scene(contenedor); 
@@ -383,35 +400,7 @@ public class AlquilerCursos extends Application{
     }
     
     
-   public ArrayList Alquilarcursos(){
-       
-       
-       ArrayList alquilar = new ArrayList();
-       
-       try{
-           
-            Connection conexion = obtener_connexio_BD();
-            String cli = "SELECT * FROM cliente";
 
-            Statement stmtpa = conexion.createStatement();
-            ResultSet rs = stmtpa.executeQuery(cli);
-           
-       }catch (Exception ex){
-            ex.printStackTrace();
-        
-       }
-       return null;
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-   }
    
    public void FiltrarDni(){
        
@@ -441,7 +430,6 @@ public class AlquilerCursos extends Application{
        
        if(client != null){
            this.txtDni.setText(client.getDni());
-           System.out.println(client.getDni());
            
        }
        return client;
@@ -464,6 +452,14 @@ public class AlquilerCursos extends Application{
         
         
     }
+    public Curso SeleccionarID(){
+        Curso id = this.tblCursos.getSelectionModel().getSelectedItem();
+        
+        if(id != null){
+            this.txtID.setText(String.valueOf(id.getId()));
+        }
+        return id;
+    }
     
     
     
@@ -472,62 +468,245 @@ public class AlquilerCursos extends Application{
     
     //*****************VALIDACIONES ***************************************\\
     
-     public static boolean validarDni(String dni) {
-         
-        // TODO code application logic here
-        char[] lletraDni = { 'T', 'R', 'W', 'A', 'G', 'M', 'Y', 'F', 'P', 'D', 'X', 'B', 'N', 'J', 'Z', 'S', 'Q', 'V',
-                'H', 'L', 'C', 'K', 'E' };
-        //dniInt=0;       
-        String dniNum = "";
-				
-		// TODO Auto-generated method stub
-        boolean dniCorrecte = true;
-        // donem longitud al dni
-        if (dni.length() != 9) {
-            System.out.println("El dni tiene que tener 9 caracteres");
-            dniCorrecte=false;
-            return false;
-        } else {
-        // mirem que l'�ltim d�git tingui una lletra
+    
+     
+     
+   public boolean ValidarDni (String Dni){
+      boolean nie = true;
+       try{
+           Connection conexion = obtener_connexio_BD();
+            String cliente = "SELECT DNI FROM cliente WHERE DNI = '"+Dni+"'";
 
-            char ult = dni.charAt(dni.length()-1);
-            // Convertim minuscula a majuscula
-            if (ult >= 'a' && ult <= 'z') {
-                ult -= 32;
+            Statement stmtpa = conexion.createStatement();
+            ResultSet rs = stmtpa.executeQuery(cliente);
+            
+            while(rs.next()){
+                 Dni = rs.getString("DNI");
             }
-            if (ult >= 'A' && ult <= 'Z') {
-            // mirem que els primers 8 digits siguin numeros
-                for (int i = 0; i < 8; i++) {
-                    if (dni.charAt(i) < '0' || dni.charAt(i) > '9') {
-                        System.out.println("Les 8 primeras posiciones tienen que se numericas");
-                        dniCorrecte = false;
-                        return false;
-                        //break;
-                    }
+                if (Dni == null) {
+                    nie = false;
+                    
+                    
                 }
-                char lletra = 0;
+            
+            
+            
+       }catch(SQLException ex){
+           ex.printStackTrace();
+       }
+        return nie;
+        
+   }
+  
+      public boolean ValidarNombre (String nombre){
+          boolean nom = true;
+      
+       try{
+           Connection conexion = obtener_connexio_BD();
+            String curso = "SELECT Nombre FROM curso WHERE Nombre = '"+nombre+"'";
 
-                if (dniCorrecte) {
-
-                    dni = dni.substring(0, dni.length() - 1);
-                    System.out.println("DNI: " + dni);
-
-                    int dniInte = Integer.parseInt(dni);
-                    int reste = dniInte % 23;
-                    System.out.println("Reste: " + reste);
-                    System.out.println("Ult: " + ult);
-                    System.out.println("Lletra DNI es: " + lletraDni[reste]);
-                    if (ult == lletraDni[reste]) {
-                        System.out.println("El dni correcto.");
-                    } else {
-                        //System.out.println("Aquest dni no existeix/no es correcte.");
-                        dniCorrecte = false;
-                        return false;
-                    }
-                }
-            } 
-        }
-        return true;
+            Statement stmtpa = conexion.createStatement();
+            ResultSet rs = stmtpa.executeQuery(curso);
+            
+            while(rs.next()){         
+            
+                 nombre = rs.getString("Nombre");
+            }    
+                if (nombre == null) {
+                    nom = false;                  
+                }        
+            
+       }catch(SQLException ex){
+           ex.printStackTrace();
+       }
+        return nom;        
+   }
+      
+   
+      public String ValidarCarnetCliente(String dni){
+          
+          String CarnetCliente = null;
+          try{
+              Connection conexion = obtener_connexio_BD();
+              String carnet = "SELECT Numfamilia from cliente WHERE DNI = '"+dni+"'";
+              
+              Statement stmtpa = conexion.createStatement();
+              ResultSet rs = stmtpa.executeQuery(carnet);
+              
+              while(rs.next()){
+                  
+               CarnetCliente = rs.getString("Numfamilia");
+               
+              }
+              
+          }catch(SQLException ex){
+              ex.printStackTrace();              
+          }      
+        return CarnetCliente;
+          
+        
+          
+          
      }
+      
+      public String ValidarCarnetCurso(int id){
+          
+           String CarnetCliente = null;
+          try{
+              Connection conexion = obtener_connexio_BD();
+              String carnet = "SELECT tipo_carnet from familiar WHERE id = '"+id+"'";
+              
+              Statement stmtpa = conexion.createStatement();
+              ResultSet rs = stmtpa.executeQuery(carnet);
+              
+              while(rs.next()){
+                  
+                    CarnetCliente = rs.getString("tipo_carnet");
+               
+               
+              }
+              
+              
+          }catch(SQLException ex){
+              ex.printStackTrace();              
+          }      
+          
+        return CarnetCliente;
+          
+      }
+      
+      
+      
+    public String Precio (int id){
+
+        String precio = null;
+        try{
+                  Connection conexion = obtener_connexio_BD();
+                  String carnet = "SELECT una_hora from curso WHERE id = '"+id+"'";
+
+                  Statement stmtpa = conexion.createStatement();
+                  ResultSet rs = stmtpa.executeQuery(carnet);
+
+                  while(rs.next()){
+
+                        precio = rs.getString("una_hora");
+
+
+                  }
+        }catch(SQLException ex){
+                  ex.printStackTrace();              
+        }      
+        return precio;
+            
+
+
+
+    }
+
+    public int TotalPrecio(int precio){
+
+                int hora = 0;
+             if(unahora.isSelected() == true){         
+                 hora = 1;
+
+             }else if(treshoras.isSelected() == true){  
+                     hora = 3;   
+             }else if(dia.isSelected() == true){
+                    hora = 6; 
+             }else {
+
+             }
+        return hora;
+            
+            
+    }
+    
+    /**
+     *
+     * @return
+     */
+   public void  Alquilar (){
+          
+        String dni = txtDni.getText();
+        String curso = txtCurso.getText();
+        int id = Integer.parseInt(txtID.getText());
+        
+        String carcli = ValidarCarnetCliente(dni);
+        String carcur = ValidarCarnetCurso(id);          
+                
+        
+        int precio = Integer.parseInt(Precio(id));
+        int horas = TotalPrecio(precio);
+        
+        if(ValidarDni(dni)){     
+            System.out.println(dni);
+            if(ValidarNombre(curso)){
+                
+             System.out.println(curso);
+             
+                if(carcli.equals(carcur)){
+                    System.out.println(carcur);
+                    double total;
+                    int unahora = 1, treshoras = 3, seishoras = 6;
+                    LocalDate fecha = LocalDate.now();
+                    System.out.println(fecha);
+                    if(horas == unahora){
+                        total = precio * horas / 1.20;        
+                        System.out.println(total);
+                        
+                    }else if(horas == treshoras){
+                        total = precio * horas / 1.30;        
+                        System.out.println(total);
+                        
+                    }else if(horas == seishoras){
+                        total = precio * horas / 1.50;        
+                        System.out.println(total);
+                    }
+                    
+                    
+                        
+                }
+            }          
+        }
+     }
+   
+   
+   
+   
+   public static  CursoAlquilado[] Almacenar (){
+       
+       CursoAlquilado[] alquilado = new CursoAlquilado [100];
+       
+       try{
+            Connection conexion = obtener_connexio_BD();
+            String cursos = "SELECT * FROM realiza";
+
+            Statement stmtpa = conexion.createStatement();
+            ResultSet rs = stmtpa.executeQuery(cursos);
+            int i = 0;
+            while(rs.next()){
+                
+               String dni = rs.getString("Dni"); 
+               int curso = rs.getInt("id_curso");
+               int descuento = rs.getInt("descuento");
+               int horas = rs.getInt("horas");
+               double precio = rs.getDouble("precio");
+               String fecha = rs.getString("Fecha");
+            
+                
+              alquilado[i] = new CursoAlquilado(dni, curso, descuento, horas, precio, fecha);
+              
+              i++;
+            }
+            
+            
+        }catch(Exception ex){
+            ex.printStackTrace();
+            
+        }        
+        return alquilado;
+             
+       
+   }
     
 }
