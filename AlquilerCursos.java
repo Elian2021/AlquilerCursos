@@ -8,17 +8,20 @@ package alquilercursos;
 import static conexion.Conexion.obtener_connexio_BD;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.control.Label;
@@ -29,6 +32,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javax.swing.JOptionPane;
 /**
  *
  * @author elian
@@ -42,7 +46,7 @@ public class AlquilerCursos extends Application{
     Pane PaneCursos, PaneAlquilados, PaneClientes, PaneAlquilarCurso;
     VBox vbox;
     
-    
+    HashMap <CursoAlquilado, Integer> listaAlquilados = new HashMap <CursoAlquilado, Integer>();
     
     TableView<Curso> tblCursos;
     TableView<CursoAlquilado> tblalquiler;
@@ -167,7 +171,7 @@ public class AlquilerCursos extends Application{
         btnAlquilar.setMinWidth(100);
         btnAlquilar.setTranslateX(250);
         btnAlquilar.setTranslateY(400);
-        btnAlquilar.setOnAction(e-> Alquilar ());
+        btnAlquilar.setOnAction(e-> CursosAlqui());
         
         
         
@@ -332,7 +336,7 @@ public class AlquilerCursos extends Application{
 
         try{
             Connection conexion = obtener_connexio_BD();
-            String alquiler = "SELECT * FROM realiza";
+            String alquiler = "SELECT * FROM realiza WHERE Fecha = CURDATE()";
 
             Statement stmtpa = conexion.createStatement();
             ResultSet rs = stmtpa.executeQuery(alquiler);
@@ -391,12 +395,8 @@ public class AlquilerCursos extends Application{
             
         }catch (Exception ex){
             ex.printStackTrace();
-        
     }
-        return clientes;
-        
-        
-        
+        return clientes; 
     }
     
     
@@ -419,9 +419,6 @@ public class AlquilerCursos extends Application{
            
            this.tblcliente.setItems(filtrarcliente);
        }
-       
-   
-   
    }
    
    public Cliente SeleccionarDni(){       
@@ -433,7 +430,6 @@ public class AlquilerCursos extends Application{
            
        }
        return client;
-    
     }
    
     public Curso SeleccionarCarnet(){
@@ -445,7 +441,6 @@ public class AlquilerCursos extends Application{
            
        }
        return curso;
-    
     }
    
     public void InsertarHoras(){
@@ -462,15 +457,8 @@ public class AlquilerCursos extends Application{
     }
     
     
-    
-    
-    
-    
     //*****************VALIDACIONES ***************************************\\
-    
-    
-     
-     
+    //Metodo validar DNI
    public boolean ValidarDni (String Dni){
       boolean nie = true;
        try{
@@ -483,21 +471,16 @@ public class AlquilerCursos extends Application{
             while(rs.next()){
                  Dni = rs.getString("DNI");
             }
-                if (Dni == null) {
-                    nie = false;
-                    
-                    
-                }
-            
-            
-            
+            if (Dni == null) {
+                nie = false;    
+            }   
        }catch(SQLException ex){
            ex.printStackTrace();
        }
-        return nie;
-        
+        return nie;  
    }
-  
+   
+   //Metodo validar nombre curso
       public boolean ValidarNombre (String nombre){
           boolean nom = true;
       
@@ -522,8 +505,8 @@ public class AlquilerCursos extends Application{
         return nom;        
    }
       
-   
-      public String ValidarCarnetCliente(String dni){
+   //Metodo coger carnet familiar del cliente
+      public String ValidarCarnetClienteFamiliar(String dni){
           
           String CarnetCliente = null;
           try{
@@ -542,14 +525,34 @@ public class AlquilerCursos extends Application{
           }catch(SQLException ex){
               ex.printStackTrace();              
           }      
-        return CarnetCliente;
-          
-        
-          
-          
+        return CarnetCliente;  
      }
       
-      public String ValidarCarnetCurso(int id){
+      //Metodo coger carnet competicion cliente
+      public String ValidarCarnetClienteCompeticion(String dni){
+          
+          String CarnetCliente = null;
+          try{
+              Connection conexion = obtener_connexio_BD();
+              String carnet = "SELECT Numfederacion from cliente WHERE DNI = '"+dni+"'";
+              
+              Statement stmtpa = conexion.createStatement();
+              ResultSet rs = stmtpa.executeQuery(carnet);
+              
+              while(rs.next()){
+                  
+               CarnetCliente = rs.getString("Numfedereacion");
+               
+              }
+              
+          }catch(SQLException ex){
+              ex.printStackTrace();              
+          }      
+        return CarnetCliente;  
+     }
+      
+      //Metodo validar carnet familiar cliente
+      public String ValidarCarnetCursoFamiliar(int id){
           
            String CarnetCliente = null;
           try{
@@ -560,13 +563,8 @@ public class AlquilerCursos extends Application{
               ResultSet rs = stmtpa.executeQuery(carnet);
               
               while(rs.next()){
-                  
                     CarnetCliente = rs.getString("tipo_carnet");
-               
-               
               }
-              
-              
           }catch(SQLException ex){
               ex.printStackTrace();              
           }      
@@ -575,11 +573,32 @@ public class AlquilerCursos extends Application{
           
       }
       
+      // Metodo validar carnet competicion cliente
+      public String ValidarCarnetCursoCompeticion(int id){
+          
+           String CarnetCliente = null;
+          try{
+              Connection conexion = obtener_connexio_BD();
+              String carnet = "SELECT carnet_federacion from competicion WHERE id = '"+id+"'";
+              
+              Statement stmtpa = conexion.createStatement();
+              ResultSet rs = stmtpa.executeQuery(carnet);
+              
+              while(rs.next()){
+                    CarnetCliente = rs.getString("tipo_carnet");
+              }  
+          }catch(SQLException ex){
+              ex.printStackTrace();              
+          }      
+          
+        return CarnetCliente;
+          
+      }
       
-      
-    public String Precio (int id){
+    //Metodo coger precio hora curso 
+    public double PrecioHora (int id){
 
-        String precio = null;
+        double precio = 0;
         try{
                   Connection conexion = obtener_connexio_BD();
                   String carnet = "SELECT una_hora from curso WHERE id = '"+id+"'";
@@ -589,91 +608,16 @@ public class AlquilerCursos extends Application{
 
                   while(rs.next()){
 
-                        precio = rs.getString("una_hora");
-
-
+                        precio = rs.getDouble("una_hora");
                   }
         }catch(SQLException ex){
                   ex.printStackTrace();              
         }      
         return precio;
-            
-
-
 
     }
-
-    public int TotalPrecio(int precio){
-
-                int hora = 0;
-             if(unahora.isSelected() == true){         
-                 hora = 1;
-
-             }else if(treshoras.isSelected() == true){  
-                     hora = 3;   
-             }else if(dia.isSelected() == true){
-                    hora = 6; 
-             }else {
-
-             }
-        return hora;
-            
-            
-    }
-    
-    /**
-     *
-     * @return
-     */
-   public void  Alquilar (){
-          
-        String dni = txtDni.getText();
-        String curso = txtCurso.getText();
-        int id = Integer.parseInt(txtID.getText());
-        
-        String carcli = ValidarCarnetCliente(dni);
-        String carcur = ValidarCarnetCurso(id);          
-                
-        
-        int precio = Integer.parseInt(Precio(id));
-        int horas = TotalPrecio(precio);
-        
-        if(ValidarDni(dni)){     
-            System.out.println(dni);
-            if(ValidarNombre(curso)){
-                
-             System.out.println(curso);
-             
-                if(carcli.equals(carcur)){
-                    System.out.println(carcur);
-                    double total;
-                    int unahora = 1, treshoras = 3, seishoras = 6;
-                    LocalDate fecha = LocalDate.now();
-                    System.out.println(fecha);
-                    if(horas == unahora){
-                        total = precio * horas / 1.20;        
-                        System.out.println(total);
-                        
-                    }else if(horas == treshoras){
-                        total = precio * horas / 1.30;        
-                        System.out.println(total);
-                        
-                    }else if(horas == seishoras){
-                        total = precio * horas / 1.50;        
-                        System.out.println(total);
-                    }
-                    
-                    
-                        
-                }
-            }          
-        }
-     }
    
-   
-   
-   
-   public static  CursoAlquilado[] Almacenar (){
+      public static  CursoAlquilado[] CursoMasAlquilado (){
        
        CursoAlquilado[] alquilado = new CursoAlquilado [100];
        
@@ -698,8 +642,6 @@ public class AlquilerCursos extends Application{
               
               i++;
             }
-            
-            
         }catch(Exception ex){
             ex.printStackTrace();
             
@@ -708,5 +650,178 @@ public class AlquilerCursos extends Application{
              
        
    }
+     //Metodo guardar curso alquilado 
+    public CursoAlquilado CursosAlqui(){
+        //variable para crear el curso
+        CursoAlquilado nCurso = new CursoAlquilado();
+        
+        int hora = 0;
+        double precio_total;
+        int descuento=0;
+        //datos que introduce cliente  
+        String dni = txtDni.getText();
+        String curso = txtCurso.getText();
+        int id = Integer.parseInt(txtID.getText());
+        //horas seleccionadas
+        if(unahora.isSelected()){
+            hora=1;
+            descuento=60;
+        }
+        if(treshoras.isSelected()){
+            hora=3;
+            descuento=70;
+        }
+        if(dia.isSelected()){
+            hora=6;
+            descuento=90;
+        }
+        
+        if(ValidarDni(dni)){     
+            System.out.println(dni);
+            
+            if(ValidarNombre(curso)){
+                
+             System.out.println(curso);
+             
+                
+                if(id==14 || id==15){
+                    System.out.println("El curso elegido es un curso familiar.");
+                    //cpgemos carnet cliente y carnet necesario
+                    String carcli = ValidarCarnetClienteFamiliar(dni);
+                    String carcur = ValidarCarnetCursoFamiliar(id); 
+                    //cogemos precio hora segun el id
+                    double precio = PrecioHora(id);
+                    
+                    if(carcli.equals(null) || (!(carcli.equals(carcur)))){
+                        double totalP = TotalPrecio(hora, precio);
+                        nCurso = new CursoAlquilado(dni, id, 0, hora, totalP, String.valueOf(LocalDate.now()));
+                        //guardamos en el hashMap
+                        listaAlquilados.put(nCurso, listaAlquilados.containsKey(nCurso) ? listaAlquilados.get(nCurso)+1 :1);
+                        //añandimos el curso en alquilados y mostramos
+                        alquilado.add(nCurso);
+                        tblalquiler.setItems(alquilado);
+                        //limpiamos campos
+                        this.txtDni.clear();
+                        this.txtCurso.clear();
+                        this.txtID.clear();
+                        this.unahora.setSelected(false);;
+                        this.treshoras.setSelected(false);
+                        this.dia.setSelected(false);
+                        
+                        
+                    }else if(carcli.equals(carcur)){
+                        
+                        double totalP = TotalPrecio(hora, precio);
+                        double descFam = 0.60;
+                        totalP = totalP * descFam;
+                        
+                        nCurso = new CursoAlquilado(dni, id, descuento, hora, totalP, String.valueOf(LocalDate.now()));
+                        //guardamos en el hashMap
+                        listaAlquilados.put(nCurso, listaAlquilados.containsKey(nCurso) ? listaAlquilados.get(nCurso)+1 :1);
+                        //añandimos el curso en alquilados y mostramos
+                        alquilado.add(nCurso);
+                        tblalquiler.setItems(alquilado);
+                        //limpiamos campos
+                        this.txtDni.clear();
+                        this.txtCurso.clear();
+                        this.txtID.clear();
+                        this.unahora.setSelected(false);;
+                        this.treshoras.setSelected(false);
+                        this.dia.setSelected(false);
+                    }
+                    
+        
+                }else if(id>=10 || id <=13){
+                    
+                    System.out.println("El curso elegido es un curso de competicion.");
+                    //cogemos carnet cliente y carnet necesario
+                    String carcli = ValidarCarnetClienteCompeticion(dni);
+                    String carcur = ValidarCarnetCursoCompeticion(id); 
+                    //cogemos precio hora segun el id
+                    double precio = PrecioHora(id);
+                    
+                    if(carcli.equals(null) || (!(carcli.equals(carcur)))){
+                        Alert alert = new Alert (Alert.AlertType.ERROR);
+                        alert.setHeaderText(null);
+                        alert.setTitle("ERROR");
+                        alert.setContentText("Este cliente no dispone del carnet obligatorio para realizar la actividad.");
+                        alert.showAndWait();
+                        
+                    }else if(carcli.equals(carcur)){
+                        
+                        double totalP = TotalPrecio(hora, precio);
+                        
+                        nCurso = new CursoAlquilado(dni, id, descuento, hora, totalP, String.valueOf(LocalDate.now()));
+                        //guardamos en el hashMap
+                        listaAlquilados.put(nCurso, listaAlquilados.containsKey(nCurso) ? listaAlquilados.get(nCurso)+1 :1);
+                        //añandimos el curso en alquilados y mostramos
+                        alquilado.add(nCurso);
+                        tblalquiler.setItems(alquilado);
+                        //limpiamos campos
+                        this.txtDni.clear();
+                        this.txtCurso.clear();
+                        this.txtID.clear();
+                        this.unahora.setSelected(false);;
+                        this.treshoras.setSelected(false);
+                        this.dia.setSelected(false);
+                    }
+                    
+                    }else{
+                        Alert alert = new Alert (Alert.AlertType.ERROR);
+                        alert.setHeaderText(null);
+                        alert.setTitle("ERROR");
+                        alert.setContentText("El ID introducido no corresponde a ningun curso.");
+                        alert.showAndWait();
+                    }
+            }else{
+                Alert alert = new Alert (Alert.AlertType.ERROR);
+                alert.setHeaderText(null);
+                alert.setTitle("ERROR");
+                alert.setContentText("El curso introducido no se encuentra en la base de datos.");
+                alert.showAndWait();
+            }
+        }else{
+            Alert alert = new Alert (Alert.AlertType.ERROR);
+            alert.setHeaderText(null);
+            alert.setTitle("ERROR");
+            alert.setContentText("El dni introducido no corresponde a ningun cliente.");
+            alert.showAndWait();
+        }
+          
+       return nCurso;   
+      }
+    
+    public  double  TotalPrecio (int hora, double precio) {
+
+         double precioTotal = 0;
+         double descuento = 0;
+         double calcularDesc = 0;
+         
+         if(hora==1){
+             descuento = 0.80;
+         }else if(hora==3){
+             descuento = 0.70;
+            } else if(hora==6){
+                descuento = 0.50;
+               } 
+         
+         precioTotal = (hora * precio)*descuento;
+         
+         return precioTotal;
+    }
+    
+    public String Guarda(String nCurso){
+        
+        Connection conexion = obtener_connexio_BD();
+        System.out.println(nCurso);
+        
+        //String Guardar = "INSERT INTO realiza (Dni, id_curso, descuento, horas, precio, fecha") VALUES ('+nCurso+')";
+        
+        
+        
+        return null;
+
+        
+    }
     
 }

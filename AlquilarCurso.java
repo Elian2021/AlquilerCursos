@@ -11,6 +11,12 @@ public class AlquilarCurso {
     private double precio;
     private String fecha;
 
+    public AlquilarCurso() {
+    }
+
+    
+    
+    
     public AlquilarCurso(Cliente Dni, Curso id, int descuento, int horas, double precio, String fecha) {
         this.Dni = Dni;
         this.id = id;
